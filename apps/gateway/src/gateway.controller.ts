@@ -1,12 +1,15 @@
-import { Controller, Get } from '@nestjs/common';
-import { GatewayService } from './gateway.service';
+import { Controller, Get, Req } from '@nestjs/common';
+import { Request } from 'express';
+import { Roles } from './auth/roles.decorator';
 
-@Controller()
+@Controller('test')
 export class GatewayController {
-  constructor(private readonly gatewayService: GatewayService) {}
-
-  @Get()
-  getHello(): string {
-    return this.gatewayService.getHello();
+  @Get('protected')
+  @Roles('USER', 'ADMIN')
+  getProtected(@Req() req: Request) {
+    return {
+      message: 'You are authenticated',
+      user: req.user,
+    };
   }
 }

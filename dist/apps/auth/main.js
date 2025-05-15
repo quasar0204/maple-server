@@ -413,7 +413,7 @@ const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const auth_module_1 = __webpack_require__(/*! ./auth.module */ "./apps/auth/src/auth.module.ts");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(auth_module_1.AuthModule);
-    await app.listen(process.env.port ?? 3000);
+    await app.listen(3000);
 }
 bootstrap();
 
