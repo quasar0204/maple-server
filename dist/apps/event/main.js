@@ -2,6 +2,139 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./apps/event/src/auth/jwt-auth.guard.ts":
+/*!***********************************************!*\
+  !*** ./apps/event/src/auth/jwt-auth.guard.ts ***!
+  \***********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.JwtAuthGuard = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
+let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
+    canActivate(context) {
+        const result = super.canActivate(context);
+        const req = context.switchToHttp().getRequest();
+        req.user = this.getRequest(context).user;
+        return result;
+    }
+};
+exports.JwtAuthGuard = JwtAuthGuard;
+exports.JwtAuthGuard = JwtAuthGuard = __decorate([
+    (0, common_1.Injectable)()
+], JwtAuthGuard);
+
+
+/***/ }),
+
+/***/ "./apps/event/src/auth/jwt.strategy.ts":
+/*!*********************************************!*\
+  !*** ./apps/event/src/auth/jwt.strategy.ts ***!
+  \*********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.JwtStrategy = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
+const passport_jwt_1 = __webpack_require__(/*! passport-jwt */ "passport-jwt");
+let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
+    constructor() {
+        super({
+            jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
+            ignoreExpiration: false,
+            secretOrKey: process.env.JWT_SECRET,
+        });
+    }
+    async validate(payload) {
+        return { userId: payload.sub, email: payload.email, role: payload.role };
+    }
+};
+exports.JwtStrategy = JwtStrategy;
+exports.JwtStrategy = JwtStrategy = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [])
+], JwtStrategy);
+
+
+/***/ }),
+
+/***/ "./apps/event/src/auth/roles.decorator.ts":
+/*!************************************************!*\
+  !*** ./apps/event/src/auth/roles.decorator.ts ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Roles = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const Roles = (...roles) => (0, common_1.SetMetadata)('roles', roles);
+exports.Roles = Roles;
+
+
+/***/ }),
+
+/***/ "./apps/event/src/auth/roles.guard.ts":
+/*!********************************************!*\
+  !*** ./apps/event/src/auth/roles.guard.ts ***!
+  \********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RolesGuard = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
+let RolesGuard = class RolesGuard {
+    constructor(reflector) {
+        this.reflector = reflector;
+    }
+    canActivate(context) {
+        const requiredRoles = this.reflector.get('roles', context.getHandler());
+        if (!requiredRoles)
+            return true;
+        const user = context.switchToHttp().getRequest().user;
+        return requiredRoles.includes(user?.role);
+    }
+};
+exports.RolesGuard = RolesGuard;
+exports.RolesGuard = RolesGuard = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof core_1.Reflector !== "undefined" && core_1.Reflector) === "function" ? _a : Object])
+], RolesGuard);
+
+
+/***/ }),
+
 /***/ "./apps/event/src/controllers/event.controller.ts":
 /*!********************************************************!*\
   !*** ./apps/event/src/controllers/event.controller.ts ***!
@@ -33,6 +166,7 @@ const claim_reward_dto_1 = __webpack_require__(/*! ../dto/claim-reward.dto */ ".
 const condition_evaluator_1 = __webpack_require__(/*! ../utils/condition-evaluator */ "./apps/event/src/utils/condition-evaluator.ts");
 const claim_service_1 = __webpack_require__(/*! ../services/claim.service */ "./apps/event/src/services/claim.service.ts");
 const user_service_1 = __webpack_require__(/*! ../services/user.service */ "./apps/event/src/services/user.service.ts");
+const roles_decorator_1 = __webpack_require__(/*! ../auth/roles.decorator */ "./apps/event/src/auth/roles.decorator.ts");
 let EventController = class EventController {
     constructor(eventService, rewardService, claimService, userService, conditionEvaluator) {
         this.eventService = eventService;
@@ -77,6 +211,7 @@ let EventController = class EventController {
 exports.EventController = EventController;
 __decorate([
     (0, common_1.Post)('events'),
+    (0, roles_decorator_1.Roles)('OPERATOR', 'ADMIN'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [typeof (_f = typeof create_event_dto_1.CreateEventDto !== "undefined" && create_event_dto_1.CreateEventDto) === "function" ? _f : Object]),
@@ -97,6 +232,7 @@ __decorate([
 ], EventController.prototype, "getEventById", null);
 __decorate([
     (0, common_1.Post)('rewards'),
+    (0, roles_decorator_1.Roles)('OPERATOR', 'ADMIN'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [typeof (_g = typeof create_reward_dto_1.CreateRewardDto !== "undefined" && create_reward_dto_1.CreateRewardDto) === "function" ? _g : Object]),
@@ -111,6 +247,7 @@ __decorate([
 ], EventController.prototype, "getRewardsByEvent", null);
 __decorate([
     (0, common_1.Post)('claims'),
+    (0, roles_decorator_1.Roles)('USER', 'ADMIN'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [typeof (_h = typeof claim_reward_dto_1.ClaimRewardDto !== "undefined" && claim_reward_dto_1.ClaimRewardDto) === "function" ? _h : Object]),
@@ -118,6 +255,7 @@ __decorate([
 ], EventController.prototype, "claimReward", null);
 __decorate([
     (0, common_1.Get)('claims/user/:userId'),
+    (0, roles_decorator_1.Roles)('USER', 'ADMIN'),
     __param(0, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -125,6 +263,7 @@ __decorate([
 ], EventController.prototype, "getClaimsByUser", null);
 __decorate([
     (0, common_1.Get)('claims'),
+    (0, roles_decorator_1.Roles)('AUDITOR', 'ADMIN'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
@@ -313,6 +452,7 @@ exports.EventModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
+const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const event_controller_1 = __webpack_require__(/*! ./controllers/event.controller */ "./apps/event/src/controllers/event.controller.ts");
 const event_service_1 = __webpack_require__(/*! ./services/event.service */ "./apps/event/src/services/event.service.ts");
 const reward_service_1 = __webpack_require__(/*! ./services/reward.service */ "./apps/event/src/services/reward.service.ts");
@@ -322,6 +462,11 @@ const reward_schema_1 = __webpack_require__(/*! ./schemas/reward.schema */ "./ap
 const claim_schema_1 = __webpack_require__(/*! ./schemas/claim.schema */ "./apps/event/src/schemas/claim.schema.ts");
 const condition_evaluator_1 = __webpack_require__(/*! ./utils/condition-evaluator */ "./apps/event/src/utils/condition-evaluator.ts");
 const user_service_1 = __webpack_require__(/*! ./services/user.service */ "./apps/event/src/services/user.service.ts");
+const jwt_1 = __webpack_require__(/*! @nestjs/jwt */ "@nestjs/jwt");
+const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
+const jwt_strategy_1 = __webpack_require__(/*! ./auth/jwt.strategy */ "./apps/event/src/auth/jwt.strategy.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! ./auth/jwt-auth.guard */ "./apps/event/src/auth/jwt-auth.guard.ts");
+const roles_guard_1 = __webpack_require__(/*! ./auth/roles.guard */ "./apps/event/src/auth/roles.guard.ts");
 let EventModule = class EventModule {
 };
 exports.EventModule = EventModule;
@@ -329,6 +474,11 @@ exports.EventModule = EventModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
+            passport_1.PassportModule,
+            jwt_1.JwtModule.register({
+                secret: process.env.JWT_SECRET,
+                signOptions: { expiresIn: '1h' },
+            }),
             mongoose_1.MongooseModule.forRoot(process.env.EVENT_MONGO_URI),
             mongoose_1.MongooseModule.forFeature([
                 { name: event_schema_1.Event.name, schema: event_schema_1.EventSchema },
@@ -337,7 +487,16 @@ exports.EventModule = EventModule = __decorate([
             ]),
         ],
         controllers: [event_controller_1.EventController],
-        providers: [event_service_1.EventService, reward_service_1.RewardService, claim_service_1.ClaimService, condition_evaluator_1.ConditionEvaluator, user_service_1.UserService],
+        providers: [
+            event_service_1.EventService,
+            reward_service_1.RewardService,
+            claim_service_1.ClaimService,
+            condition_evaluator_1.ConditionEvaluator,
+            user_service_1.UserService,
+            jwt_strategy_1.JwtStrategy,
+            { provide: core_1.APP_GUARD, useClass: jwt_auth_guard_1.JwtAuthGuard },
+            { provide: core_1.APP_GUARD, useClass: roles_guard_1.RolesGuard },
+        ],
     })
 ], EventModule);
 
@@ -795,6 +954,16 @@ module.exports = require("@nestjs/core");
 
 /***/ }),
 
+/***/ "@nestjs/jwt":
+/*!******************************!*\
+  !*** external "@nestjs/jwt" ***!
+  \******************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/jwt");
+
+/***/ }),
+
 /***/ "@nestjs/mongoose":
 /*!***********************************!*\
   !*** external "@nestjs/mongoose" ***!
@@ -802,6 +971,16 @@ module.exports = require("@nestjs/core");
 /***/ ((module) => {
 
 module.exports = require("@nestjs/mongoose");
+
+/***/ }),
+
+/***/ "@nestjs/passport":
+/*!***********************************!*\
+  !*** external "@nestjs/passport" ***!
+  \***********************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/passport");
 
 /***/ }),
 
@@ -832,6 +1011,16 @@ module.exports = require("class-validator");
 /***/ ((module) => {
 
 module.exports = require("mongoose");
+
+/***/ }),
+
+/***/ "passport-jwt":
+/*!*******************************!*\
+  !*** external "passport-jwt" ***!
+  \*******************************/
+/***/ ((module) => {
+
+module.exports = require("passport-jwt");
 
 /***/ })
 
@@ -873,8 +1062,15 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const event_module_1 = __webpack_require__(/*! ./event.module */ "./apps/event/src/event.module.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const jwt_auth_guard_1 = __webpack_require__(/*! ./auth/jwt-auth.guard */ "./apps/event/src/auth/jwt-auth.guard.ts");
+const roles_guard_1 = __webpack_require__(/*! ./auth/roles.guard */ "./apps/event/src/auth/roles.guard.ts");
+const core_2 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(event_module_1.EventModule);
+    app.useGlobalPipes(new common_1.ValidationPipe());
+    const reflector = app.get(core_2.Reflector);
+    app.useGlobalGuards(new jwt_auth_guard_1.JwtAuthGuard(), new roles_guard_1.RolesGuard(reflector));
     await app.listen(3002);
 }
 bootstrap();
