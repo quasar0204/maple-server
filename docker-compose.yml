@@ -1,10 +1,43 @@
-version: "3.8"
+version: '3.8'
 services:
-  mongodb:
-    image: mongo:5
-    container_name: mongodb
-    restart: unless-stopped
+  mongo:
+    image: mongo
+    container_name: mongo
     ports:
-      - "27017:27017"
+      - '27017:27017'
     volumes:
-      - ./data/mongo:/data/db
+      - mongo-data:/data/db
+
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile.auth
+    ports:
+      - '3000:3000'
+    environment:
+      - AUTH_MONGO_URI=mongodb://mongo:27017/maple-auth
+      - JWT_SECRET=bimilim
+
+  event:
+    build:
+      context: .
+      dockerfile: Dockerfile.event
+    ports:
+      - '3002:3002'
+    environment:
+      - EVENT_MONGO_URI=mongodb://mongo:27017/maple-event
+      - JWT_SECRET=bimilim
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.gateway
+    ports:
+      - '3001:3001'
+    environment:
+      - AUTH_SERVICE_URL=http://auth:3000
+      - EVENT_SERVICE_URL=http://event:3002
+      - JWT_SECRET=bimilim
+
+volumes:
+  mongo-data:
