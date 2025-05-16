@@ -205,6 +205,8 @@ const jwt_auth_guard_1 = __webpack_require__(/*! ./auth/jwt-auth.guard */ "./app
 const roles_guard_1 = __webpack_require__(/*! ./auth/roles.guard */ "./apps/gateway/src/auth/roles.guard.ts");
 const gateway_controller_1 = __webpack_require__(/*! ./gateway.controller */ "./apps/gateway/src/gateway.controller.ts");
 const gateway_service_1 = __webpack_require__(/*! ./gateway.service */ "./apps/gateway/src/gateway.service.ts");
+const proxy_service_1 = __webpack_require__(/*! ./proxy/proxy.service */ "./apps/gateway/src/proxy/proxy.service.ts");
+const event_proxy_1 = __webpack_require__(/*! ./proxy/event.proxy */ "./apps/gateway/src/proxy/event.proxy.ts");
 let GatewayModule = class GatewayModule {
 };
 exports.GatewayModule = GatewayModule;
@@ -217,10 +219,11 @@ exports.GatewayModule = GatewayModule = __decorate([
                 signOptions: { expiresIn: '1h' },
             }),
         ],
-        controllers: [gateway_controller_1.GatewayController],
+        controllers: [gateway_controller_1.GatewayController, event_proxy_1.EventProxyController],
         providers: [
             gateway_service_1.GatewayService,
             jwt_strategy_1.JwtStrategy,
+            proxy_service_1.ProxyService,
             { provide: core_1.APP_GUARD, useClass: jwt_auth_guard_1.JwtAuthGuard },
             { provide: core_1.APP_GUARD, useClass: roles_guard_1.RolesGuard },
         ],
@@ -255,6 +258,182 @@ exports.GatewayService = GatewayService;
 exports.GatewayService = GatewayService = __decorate([
     (0, common_1.Injectable)()
 ], GatewayService);
+
+
+/***/ }),
+
+/***/ "./apps/gateway/src/proxy/event.proxy.ts":
+/*!***********************************************!*\
+  !*** ./apps/gateway/src/proxy/event.proxy.ts ***!
+  \***********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EventProxyController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const proxy_service_1 = __webpack_require__(/*! ./proxy.service */ "./apps/gateway/src/proxy/proxy.service.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/jwt-auth.guard */ "./apps/gateway/src/auth/jwt-auth.guard.ts");
+const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
+let EventProxyController = class EventProxyController {
+    constructor(proxy, configService) {
+        this.proxy = proxy;
+        this.configService = configService;
+        this.eventUrl = this.configService.get('EVENT_SERVICE_URL');
+    }
+    createEvent(body, req) {
+        return this.proxy.forward(`${this.eventUrl}/events`, 'POST', body, {
+            Authorization: req.headers['authorization'],
+        });
+    }
+    getEvents() {
+        return this.proxy.forward(`${this.eventUrl}/events`, 'GET');
+    }
+    getEventById(id) {
+        return this.proxy.forward(`${this.eventUrl}/events/${id}`, 'GET');
+    }
+    createReward(body, req) {
+        return this.proxy.forward(`${this.eventUrl}/rewards`, 'POST', body, {
+            Authorization: req.headers['authorization'],
+        });
+    }
+    getRewardsByEvent(eventId) {
+        return this.proxy.forward(`${this.eventUrl}/rewards?eventId=${eventId}`, 'GET');
+    }
+    claimReward(body, req) {
+        return this.proxy.forward(`${this.eventUrl}/claims`, 'POST', body, {
+            Authorization: req.headers['authorization'],
+        });
+    }
+    getUserClaims(userId, req) {
+        return this.proxy.forward(`${this.eventUrl}/claims/user/${userId}`, 'GET', null, {
+            Authorization: req.headers['authorization'],
+        });
+    }
+    getAllClaims(req) {
+        return this.proxy.forward(`${this.eventUrl}/claims`, 'GET', null, {
+            Authorization: req.headers['authorization'],
+        });
+    }
+};
+exports.EventProxyController = EventProxyController;
+__decorate([
+    (0, common_1.Post)('events'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], EventProxyController.prototype, "createEvent", null);
+__decorate([
+    (0, common_1.Get)('events'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], EventProxyController.prototype, "getEvents", null);
+__decorate([
+    (0, common_1.Get)('events/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], EventProxyController.prototype, "getEventById", null);
+__decorate([
+    (0, common_1.Post)('rewards'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], EventProxyController.prototype, "createReward", null);
+__decorate([
+    (0, common_1.Get)('rewards'),
+    __param(0, (0, common_1.Query)('eventId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], EventProxyController.prototype, "getRewardsByEvent", null);
+__decorate([
+    (0, common_1.Post)('claims'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], EventProxyController.prototype, "claimReward", null);
+__decorate([
+    (0, common_1.Get)('claims/user/:userId'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('userId')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], EventProxyController.prototype, "getUserClaims", null);
+__decorate([
+    (0, common_1.Get)('claims'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], EventProxyController.prototype, "getAllClaims", null);
+exports.EventProxyController = EventProxyController = __decorate([
+    (0, common_1.Controller)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof proxy_service_1.ProxyService !== "undefined" && proxy_service_1.ProxyService) === "function" ? _a : Object, typeof (_b = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _b : Object])
+], EventProxyController);
+
+
+/***/ }),
+
+/***/ "./apps/gateway/src/proxy/proxy.service.ts":
+/*!*************************************************!*\
+  !*** ./apps/gateway/src/proxy/proxy.service.ts ***!
+  \*************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProxyService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const axios_1 = __webpack_require__(/*! axios */ "axios");
+let ProxyService = class ProxyService {
+    async forward(url, method, data, headers) {
+        const response = await (0, axios_1.default)({
+            url,
+            method,
+            data,
+            headers,
+        });
+        return response.data;
+    }
+};
+exports.ProxyService = ProxyService;
+exports.ProxyService = ProxyService = __decorate([
+    (0, common_1.Injectable)()
+], ProxyService);
 
 
 /***/ }),
@@ -306,6 +485,16 @@ module.exports = require("@nestjs/jwt");
 /***/ ((module) => {
 
 module.exports = require("@nestjs/passport");
+
+/***/ }),
+
+/***/ "axios":
+/*!************************!*\
+  !*** external "axios" ***!
+  \************************/
+/***/ ((module) => {
+
+module.exports = require("axios");
 
 /***/ }),
 
