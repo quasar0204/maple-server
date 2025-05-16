@@ -108,22 +108,6 @@ exports.Public = Public;
 
 /***/ }),
 
-/***/ "./apps/gateway/src/auth/roles.decorator.ts":
-/*!**************************************************!*\
-  !*** ./apps/gateway/src/auth/roles.decorator.ts ***!
-  \**************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Roles = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const Roles = (...roles) => (0, common_1.SetMetadata)('roles', roles);
-exports.Roles = Roles;
-
-
-/***/ }),
-
 /***/ "./apps/gateway/src/auth/roles.guard.ts":
 /*!**********************************************!*\
   !*** ./apps/gateway/src/auth/roles.guard.ts ***!
@@ -182,34 +166,23 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GatewayController = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const express_1 = __webpack_require__(/*! express */ "express");
-const roles_decorator_1 = __webpack_require__(/*! ./auth/roles.decorator */ "./apps/gateway/src/auth/roles.decorator.ts");
 let GatewayController = class GatewayController {
-    getProtected(req) {
-        return {
-            message: 'You are authenticated',
-            user: req.user,
-        };
+    gping() {
+        return { status: 'ok' };
     }
 };
 exports.GatewayController = GatewayController;
 __decorate([
-    (0, common_1.Get)('protected'),
-    (0, roles_decorator_1.Roles)('USER', 'ADMIN'),
-    __param(0, (0, common_1.Req)()),
+    (0, common_1.Get)('ping'),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_a = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _a : Object]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
-], GatewayController.prototype, "getProtected", null);
+], GatewayController.prototype, "gping", null);
 exports.GatewayController = GatewayController = __decorate([
-    (0, common_1.Controller)('test')
+    (0, common_1.Controller)('gateway')
 ], GatewayController);
 
 
@@ -599,16 +572,6 @@ module.exports = require("@nestjs/passport");
 /***/ ((module) => {
 
 module.exports = require("axios");
-
-/***/ }),
-
-/***/ "express":
-/*!**************************!*\
-  !*** external "express" ***!
-  \**************************/
-/***/ ((module) => {
-
-module.exports = require("express");
 
 /***/ }),
 
