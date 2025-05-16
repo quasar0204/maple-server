@@ -15,15 +15,32 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.JwtAuthGuard = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
+const public_decorator_1 = __webpack_require__(/*! ./public.decorator */ "./apps/gateway/src/auth/public.decorator.ts");
 let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
+    constructor(reflector) {
+        super();
+        this.reflector = reflector;
+    }
+    canActivate(context) {
+        const isPublic = this.reflector.getAllAndOverride(public_decorator_1.IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
+        if (isPublic)
+            return true;
+        return super.canActivate(context);
+    }
 };
 exports.JwtAuthGuard = JwtAuthGuard;
 exports.JwtAuthGuard = JwtAuthGuard = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof core_1.Reflector !== "undefined" && core_1.Reflector) === "function" ? _a : Object])
 ], JwtAuthGuard);
 
 
@@ -70,6 +87,23 @@ exports.JwtStrategy = JwtStrategy = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [])
 ], JwtStrategy);
+
+
+/***/ }),
+
+/***/ "./apps/gateway/src/auth/public.decorator.ts":
+/*!***************************************************!*\
+  !*** ./apps/gateway/src/auth/public.decorator.ts ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Public = exports.IS_PUBLIC_KEY = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+exports.IS_PUBLIC_KEY = 'isPublic';
+const Public = () => (0, common_1.SetMetadata)(exports.IS_PUBLIC_KEY, true);
+exports.Public = Public;
 
 
 /***/ }),
@@ -203,6 +237,7 @@ const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const jwt_strategy_1 = __webpack_require__(/*! ./auth/jwt.strategy */ "./apps/gateway/src/auth/jwt.strategy.ts");
 const jwt_auth_guard_1 = __webpack_require__(/*! ./auth/jwt-auth.guard */ "./apps/gateway/src/auth/jwt-auth.guard.ts");
 const roles_guard_1 = __webpack_require__(/*! ./auth/roles.guard */ "./apps/gateway/src/auth/roles.guard.ts");
+const auth_proxy_1 = __webpack_require__(/*! ./proxy/auth.proxy */ "./apps/gateway/src/proxy/auth.proxy.ts");
 const gateway_controller_1 = __webpack_require__(/*! ./gateway.controller */ "./apps/gateway/src/gateway.controller.ts");
 const gateway_service_1 = __webpack_require__(/*! ./gateway.service */ "./apps/gateway/src/gateway.service.ts");
 const proxy_service_1 = __webpack_require__(/*! ./proxy/proxy.service */ "./apps/gateway/src/proxy/proxy.service.ts");
@@ -219,7 +254,7 @@ exports.GatewayModule = GatewayModule = __decorate([
                 signOptions: { expiresIn: '1h' },
             }),
         ],
-        controllers: [gateway_controller_1.GatewayController, event_proxy_1.EventProxyController],
+        controllers: [gateway_controller_1.GatewayController, event_proxy_1.EventProxyController, auth_proxy_1.AuthProxyController],
         providers: [
             gateway_service_1.GatewayService,
             jwt_strategy_1.JwtStrategy,
@@ -258,6 +293,75 @@ exports.GatewayService = GatewayService;
 exports.GatewayService = GatewayService = __decorate([
     (0, common_1.Injectable)()
 ], GatewayService);
+
+
+/***/ }),
+
+/***/ "./apps/gateway/src/proxy/auth.proxy.ts":
+/*!**********************************************!*\
+  !*** ./apps/gateway/src/proxy/auth.proxy.ts ***!
+  \**********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AuthProxyController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const proxy_service_1 = __webpack_require__(/*! ./proxy.service */ "./apps/gateway/src/proxy/proxy.service.ts");
+const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
+const public_decorator_1 = __webpack_require__(/*! ../auth/public.decorator */ "./apps/gateway/src/auth/public.decorator.ts");
+let AuthProxyController = class AuthProxyController {
+    constructor(proxyService, configService) {
+        this.proxyService = proxyService;
+        this.configService = configService;
+        const url = this.configService.get('AUTH_SERVICE_URL');
+        if (!url)
+            throw new Error('AUTH_SERVICE_URL is not defined');
+        this.authServiceUrl = url;
+    }
+    async signup(body) {
+        const url = `${this.authServiceUrl}/auth/signup`;
+        return this.proxyService.forward(url, 'POST', body);
+    }
+    async login(body) {
+        const url = `${this.authServiceUrl}/auth/login`;
+        return this.proxyService.forward(url, 'POST', body);
+    }
+};
+exports.AuthProxyController = AuthProxyController;
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Post)('signup'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthProxyController.prototype, "signup", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Post)('login'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthProxyController.prototype, "login", null);
+exports.AuthProxyController = AuthProxyController = __decorate([
+    (0, common_1.Controller)('auth'),
+    __metadata("design:paramtypes", [typeof (_a = typeof proxy_service_1.ProxyService !== "undefined" && proxy_service_1.ProxyService) === "function" ? _a : Object, typeof (_b = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _b : Object])
+], AuthProxyController);
 
 
 /***/ }),

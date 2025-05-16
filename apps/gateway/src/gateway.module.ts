@@ -7,6 +7,7 @@ import { JwtStrategy } from './auth/jwt.strategy';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { RolesGuard } from './auth/roles.guard';
 
+import { AuthProxyController } from './proxy/auth.proxy';
 import { GatewayController } from './gateway.controller';
 import { GatewayService } from './gateway.service';
 
@@ -21,7 +22,7 @@ import { EventProxyController } from './proxy/event.proxy';
       signOptions: { expiresIn: '1h' },
     }),
   ],
-  controllers: [GatewayController, EventProxyController],
+  controllers: [GatewayController, EventProxyController, AuthProxyController],
   providers: [
     GatewayService,
     JwtStrategy,
