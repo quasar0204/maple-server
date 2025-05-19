@@ -7,7 +7,9 @@ import { UpdateRewardDto } from '../dto/update-reward.dto';
 
 @Injectable()
 export class RewardService {
-  constructor(@InjectModel(Reward.name) private rewardModel: Model<RewardDocument>) {}
+  constructor(
+    @InjectModel(Reward.name) private rewardModel: Model<RewardDocument>,
+  ) {}
 
   async create(dto: CreateRewardDto) {
     const created = new this.rewardModel(dto);
@@ -19,24 +21,32 @@ export class RewardService {
   }
 
   async update(eventId: string, rewardId: string, dto: UpdateRewardDto) {
-    const reward = await this.rewardModel.findOneAndUpdate(
-      { _id: rewardId, eventId },
-      { $set: dto },
-      { new: true },
-    ).exec();
+    const reward = await this.rewardModel
+      .findOneAndUpdate(
+        { _id: rewardId, eventId },
+        { $set: dto },
+        { new: true },
+      )
+      .exec();
 
     if (!reward) {
-      throw new NotFoundException('Reward not found or does not belong to event');
+      throw new NotFoundException(
+        'Reward not found or does not belong to event',
+      );
     }
 
     return reward;
   }
 
   async delete(eventId: string, rewardId: string) {
-    const result = await this.rewardModel.findOneAndDelete({ _id: rewardId, eventId }).exec();
+    const result = await this.rewardModel
+      .findOneAndDelete({ _id: rewardId, eventId })
+      .exec();
 
     if (!result) {
-      throw new NotFoundException('Reward not found or does not belong to event');
+      throw new NotFoundException(
+        'Reward not found or does not belong to event',
+      );
     }
 
     return { success: true };

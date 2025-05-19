@@ -26,7 +26,11 @@ export class Event {
   @Prop({ type: Array, required: true })
   conditions: Condition[];
 
-  @Prop({ required: true, enum: ['ON_DEMAND', 'ON_EVENT'], default: 'ON_DEMAND' })
+  @Prop({
+    required: true,
+    enum: ['ON_DEMAND', 'ON_EVENT'],
+    default: 'ON_DEMAND',
+  })
   triggerType: 'ON_DEMAND' | 'ON_EVENT';
 
   @Prop({ required: true })

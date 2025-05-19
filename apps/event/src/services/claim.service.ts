@@ -25,7 +25,11 @@ export class ClaimService {
     return !!existing;
   }
 
-  async createWithResult(dto: ClaimRewardDto, status: boolean, reason: string): Promise<Claim> {
+  async createWithResult(
+    dto: ClaimRewardDto,
+    status: boolean,
+    reason: string,
+  ): Promise<Claim> {
     const rewards = await this.rewardService.findByEvent(dto.eventId);
 
     const claim = new this.claimModel({
@@ -33,7 +37,7 @@ export class ClaimService {
       eventId: dto.eventId,
       status: status ? 'SUCCESS' : 'FAILED',
       reason,
-      rewardsGiven: status ? rewards.flatMap(r => r.rewards) : [],
+      rewardsGiven: status ? rewards.flatMap((r) => r.rewards) : [],
     });
 
     return claim.save();

@@ -54,7 +54,10 @@ export class EventProxyController {
 
   @Get('rewards')
   getRewardsByEvent(@Query('eventId') eventId: string) {
-    return this.proxy.forward(`${this.eventUrl}/rewards?eventId=${eventId}`, 'GET');
+    return this.proxy.forward(
+      `${this.eventUrl}/rewards?eventId=${eventId}`,
+      'GET',
+    );
   }
 
   @Post('claims')
@@ -68,9 +71,14 @@ export class EventProxyController {
   @Get('claims/user/:userId')
   @Roles('USER', 'ADMIN')
   getUserClaims(@Param('userId') userId: string, @Req() req: any) {
-    return this.proxy.forward(`${this.eventUrl}/claims/user/${userId}`, 'GET', null, {
-      Authorization: req.headers['authorization'],
-    });
+    return this.proxy.forward(
+      `${this.eventUrl}/claims/user/${userId}`,
+      'GET',
+      null,
+      {
+        Authorization: req.headers['authorization'],
+      },
+    );
   }
 
   @Get('claims')

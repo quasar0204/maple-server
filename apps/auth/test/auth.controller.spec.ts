@@ -19,7 +19,9 @@ describe('AuthController (e2e)', () => {
     await app.init();
 
     connection = app.get(getConnectionToken());
-    await connection.collection('users').deleteMany({ email: 'testuser@example.com' });
+    await connection
+      .collection('users')
+      .deleteMany({ email: 'testuser@example.com' });
   });
 
   it('/auth/signup (POST)', () => {

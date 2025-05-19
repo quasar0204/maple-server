@@ -7,7 +7,9 @@ import { UpdateEventDto } from '../dto/update-event.dto';
 
 @Injectable()
 export class EventService {
-  constructor(@InjectModel(Event.name) private eventModel: Model<EventDocument>) {}
+  constructor(
+    @InjectModel(Event.name) private eventModel: Model<EventDocument>,
+  ) {}
 
   async create(dto: CreateEventDto) {
     const created = new this.eventModel(dto);
@@ -15,7 +17,7 @@ export class EventService {
   }
 
   async update(id: string, dto: UpdateEventDto) {
-   return this.eventModel.findByIdAndUpdate(id, dto, { new: true }).exec();
+    return this.eventModel.findByIdAndUpdate(id, dto, { new: true }).exec();
   }
 
   async findAll() {

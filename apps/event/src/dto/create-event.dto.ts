@@ -1,4 +1,13 @@
-import { IsArray, IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -35,7 +44,9 @@ export class CreateEventDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ example: '익스트림 칼로스를 처치하면 쇼케이스 티켓을 드립니다' })
+  @ApiProperty({
+    example: '익스트림 칼로스를 처치하면 쇼케이스 티켓을 드립니다',
+  })
   @IsString()
   @IsNotEmpty()
   description: string;
@@ -47,9 +58,7 @@ export class CreateEventDto {
   @ApiProperty({
     description: '이벤트 조건들',
     type: [Object],
-    example: [
-      { type: 'achievement', achievementId: 'EXTREME_KALLOS_CLEAR' },
-    ],
+    example: [{ type: 'achievement', achievementId: 'EXTREME_KALLOS_CLEAR' }],
   })
   @IsArray()
   @ValidateNested({ each: true })

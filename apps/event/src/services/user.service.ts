@@ -11,7 +11,7 @@ export class UserService {
       achievements: [
         'EXTREME_KALLOS_CLEAR',
         'DAILY_LOGIN_365',
-        'PUNCHKING_TOP10_LARA'
+        'PUNCHKING_TOP10_LARA',
       ],
     };
   }

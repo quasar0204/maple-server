@@ -1,9 +1,18 @@
-import { IsMongoId, IsArray, ValidateNested, IsString, IsNotEmpty } from 'class-validator';
+import {
+  IsMongoId,
+  IsArray,
+  ValidateNested,
+  IsString,
+  IsNotEmpty,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ClaimRewardDto {
-  @ApiProperty({ description: '이벤트 ID', example: '6647dc3b4d2e5b7fbc9c1e3a' })
+  @ApiProperty({
+    description: '이벤트 ID',
+    example: '6647dc3b4d2e5b7fbc9c1e3a',
+  })
   @IsMongoId()
   eventId: string;
 

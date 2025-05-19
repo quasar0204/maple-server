@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put, Delete, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { EventService } from '../services/event.service';
 import { RewardService } from '../services/reward.service';
 import { CreateEventDto } from '../dto/create-event.dto';
@@ -128,9 +137,16 @@ export class EventController {
     @Param('eventId') eventId: string,
     @Body() dto: Omit<ClaimRewardDto, 'eventId'>,
   ) {
-    const alreadyClaimed = await this.claimService.hasClaimed(dto.userId, eventId);
+    const alreadyClaimed = await this.claimService.hasClaimed(
+      dto.userId,
+      eventId,
+    );
     if (alreadyClaimed) {
-      return this.claimService.createWithResult({ ...dto, eventId }, false, '이미 보상을 수령했습니다');
+      return this.claimService.createWithResult(
+        { ...dto, eventId },
+        false,
+        '이미 보상을 수령했습니다',
+      );
     }
 
     const user = await this.userService.getUserInfo(dto.userId);
@@ -138,7 +154,11 @@ export class EventController {
     const success = this.conditionEvaluator.evaluate(event.conditions, user);
     const reason = success ? '조건 충족' : '조건 불충족';
 
-    return this.claimService.createWithResult({ ...dto, eventId }, success, reason);
+    return this.claimService.createWithResult(
+      { ...dto, eventId },
+      success,
+      reason,
+    );
   }
 
   @Get('claims/user/:userId')
@@ -153,7 +173,10 @@ export class EventController {
   @Get('claims')
   @Roles('AUDITOR', 'ADMIN')
   @ApiOperation({ summary: '전체 보상 이력 조회' })
-  @ApiResponse({ status: 200, description: '전체 유저의 보상 이력 리스트 반환' })
+  @ApiResponse({
+    status: 200,
+    description: '전체 유저의 보상 이력 리스트 반환',
+  })
   getAllClaims() {
     return this.claimService.findAll();
   }

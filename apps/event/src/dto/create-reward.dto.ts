@@ -14,7 +14,10 @@ export class RewardItemDto {
 }
 
 export class CreateRewardDto {
-  @ApiProperty({ description: '이벤트 ID', example: '6647dc3b4d2e5b7fbc9c1e3a' })
+  @ApiProperty({
+    description: '이벤트 ID',
+    example: '6647dc3b4d2e5b7fbc9c1e3a',
+  })
   @IsMongoId()
   eventId: string;
 

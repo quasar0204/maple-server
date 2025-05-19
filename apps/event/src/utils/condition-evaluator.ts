@@ -22,12 +22,24 @@ export class ConditionEvaluator {
         const actual = user[cond.field];
         const expected = cond.value;
         switch (cond.operator) {
-          case '>=': if (!(actual >= expected)) return false; break;
-          case '<=': if (!(actual <= expected)) return false; break;
-          case '>':  if (!(actual > expected)) return false; break;
-          case '<':  if (!(actual < expected)) return false; break;
-          case '==': if (!(actual == expected)) return false; break;
-          case '!=': if (!(actual != expected)) return false; break;
+          case '>=':
+            if (!(actual >= expected)) return false;
+            break;
+          case '<=':
+            if (!(actual <= expected)) return false;
+            break;
+          case '>':
+            if (!(actual > expected)) return false;
+            break;
+          case '<':
+            if (!(actual < expected)) return false;
+            break;
+          case '==':
+            if (!(actual == expected)) return false;
+            break;
+          case '!=':
+            if (!(actual != expected)) return false;
+            break;
         }
       }
       if (cond.type === 'achievement') {
