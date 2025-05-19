@@ -31,6 +31,22 @@ docker compose up --build
 * Event API (직접 호출 시): [http://localhost:3002](http://localhost:3002)
 * Swagger (Event): [http://localhost:3002/api](http://localhost:3002/api)
 
+## 🧾 환경 변수 설정
+모든 서비스는 루트 디렉토리 (./)에 위치한 .env 파일을 기준으로 환경변수를 로드합니다. 다음 값을 포함해야 정상 동작합니다:
+```text
+# auth 전용
+AUTH_MONGO_URI=mongodb://localhost:27017/maple-auth
+
+# event 전용
+EVENT_MONGO_URI=mongodb://localhost:27017/maple-event
+
+# gateway + auth + event 공통
+JWT_SECRET=bimilim
+
+# base url
+EVENT_SERVICE_URL=http://localhost:3002
+AUTH_SERVICE_URL=http://localhost:3000
+```
 ---
 
 ## 🔐 역할 기반 권한
@@ -120,6 +136,14 @@ JWT Payload 구조:
 * SQL만 작성해도 (아마 비개발자인) 운영자가 직접 보상 대상자를 제어할 수 있는 구조입니다.
 * 넥슨처럼 대규모 로그 분석 환경에서는 현실적이고 확장성 높은 구조입니다.
 
+## 🚧 미구현된 보안 처리
+실제 서비스 환경에서는 보안상 다음과 같은 조치가 필요합니다:
+
+* auth 및 event 서비스는 gateway를 통해서만 접근할 수 있도록 방화벽 또는 네트워크 ACL로 외부 접근을 제한해야 합니다.
+
+* 현재 데모 구현에서는 시간 제약상 해당 제한이 적용되어 있지 않으며, 직접 API를 호출하는 것이 가능합니다.
+  (http://localhost:3002/api 에 직접 접근 가능하지만, 실제 운영 환경에서는 막혀야 정상입니다.)
+
 ---
 
 ## 🛠 기술 스택
@@ -130,5 +154,3 @@ JWT Payload 구조:
 * JWT 인증 (`@nestjs/jwt`, `passport-jwt`)
 * Swagger 문서화 (`@nestjs/swagger`)
 * Docker, Docker Compose
-
-```
