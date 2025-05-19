@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Reward, RewardDocument } from '../schemas/reward.schema';
 import { CreateRewardDto } from '../dto/create-reward.dto';
+import { UpdateRewardDto } from '../dto/update-reward.dto';
 
 @Injectable()
 export class RewardService {
@@ -15,5 +16,29 @@ export class RewardService {
 
   async findByEvent(eventId: string) {
     return this.rewardModel.find({ eventId }).exec();
+  }
+
+  async update(eventId: string, rewardId: string, dto: UpdateRewardDto) {
+    const reward = await this.rewardModel.findOneAndUpdate(
+      { _id: rewardId, eventId },
+      { $set: dto },
+      { new: true },
+    ).exec();
+
+    if (!reward) {
+      throw new NotFoundException('Reward not found or does not belong to event');
+    }
+
+    return reward;
+  }
+
+  async delete(eventId: string, rewardId: string) {
+    const result = await this.rewardModel.findOneAndDelete({ _id: rewardId, eventId }).exec();
+
+    if (!result) {
+      throw new NotFoundException('Reward not found or does not belong to event');
+    }
+
+    return { success: true };
   }
 }

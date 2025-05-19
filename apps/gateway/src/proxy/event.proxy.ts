@@ -10,9 +10,12 @@ import {
 } from '@nestjs/common';
 import { ProxyService } from './proxy.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 import { ConfigService } from '@nestjs/config';
 
 @Controller()
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class EventProxyController {
   private eventUrl: string;
 
@@ -24,7 +27,7 @@ export class EventProxyController {
   }
 
   @Post('events')
-  @UseGuards(JwtAuthGuard)
+  @Roles('OPERATOR', 'ADMIN')
   createEvent(@Body() body: any, @Req() req: any) {
     return this.proxy.forward(`${this.eventUrl}/events`, 'POST', body, {
       Authorization: req.headers['authorization'],
@@ -42,7 +45,7 @@ export class EventProxyController {
   }
 
   @Post('rewards')
-  @UseGuards(JwtAuthGuard)
+  @Roles('OPERATOR', 'ADMIN')
   createReward(@Body() body: any, @Req() req: any) {
     return this.proxy.forward(`${this.eventUrl}/rewards`, 'POST', body, {
       Authorization: req.headers['authorization'],
@@ -55,7 +58,7 @@ export class EventProxyController {
   }
 
   @Post('claims')
-  @UseGuards(JwtAuthGuard)
+  @Roles('USER', 'ADMIN')
   claimReward(@Body() body: any, @Req() req: any) {
     return this.proxy.forward(`${this.eventUrl}/claims`, 'POST', body, {
       Authorization: req.headers['authorization'],
@@ -63,7 +66,7 @@ export class EventProxyController {
   }
 
   @Get('claims/user/:userId')
-  @UseGuards(JwtAuthGuard)
+  @Roles('USER', 'ADMIN')
   getUserClaims(@Param('userId') userId: string, @Req() req: any) {
     return this.proxy.forward(`${this.eventUrl}/claims/user/${userId}`, 'GET', null, {
       Authorization: req.headers['authorization'],
@@ -71,7 +74,7 @@ export class EventProxyController {
   }
 
   @Get('claims')
-  @UseGuards(JwtAuthGuard)
+  @Roles('AUDITOR', 'ADMIN')
   getAllClaims(@Req() req: any) {
     return this.proxy.forward(`${this.eventUrl}/claims`, 'GET', null, {
       Authorization: req.headers['authorization'],

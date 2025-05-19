@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Delete, Query } from '@nestjs/common';
 import { EventService } from '../services/event.service';
 import { RewardService } from '../services/reward.service';
 import { CreateEventDto } from '../dto/create-event.dto';
@@ -8,6 +8,7 @@ import { ConditionEvaluator } from '../utils/condition-evaluator';
 import { ClaimService } from '../services/claim.service';
 import { UserService } from '../services/user.service';
 import { Roles } from '../auth/roles.decorator';
+import { UpdateRewardDto } from '../dto/update-reward.dto';
 
 @Controller()
 export class EventController {
@@ -32,45 +33,71 @@ export class EventController {
     return this.eventService.findAll();
   }
 
-  // 모든 역할: 이벤트 상세 조회
+  // 모든 역할: 이벤트 상세 조회 (보상 포함)
   @Get('events/:id')
-  getEventById(@Param('id') id: string) {
-    return this.eventService.findById(id);
+  async getEventById(@Param('id') id: string) {
+    const event = await this.eventService.findById(id);
+    const rewards = await this.rewardService.findByEvent(id);
+    return {
+      ...event.toObject(),
+      rewards,
+    };
   }
 
   // OPERATOR or ADMIN: 보상 등록
-  @Post('rewards')
+  @Post('events/:eventId/rewards')
   @Roles('OPERATOR', 'ADMIN')
-  createReward(@Body() dto: CreateRewardDto) {
-    return this.rewardService.create(dto);
+  createReward(
+    @Param('eventId') eventId: string,
+    @Body() dto: Omit<CreateRewardDto, 'eventId'>,
+  ) {
+    return this.rewardService.create({ ...dto, eventId });
   }
 
-  // 모든 역할: 이벤트별 보상 조회
-  @Get('rewards')
-  getRewardsByEvent(@Query('eventId') eventId: string) {
-    return this.rewardService.findByEvent(eventId);
+  // OPERATOR or ADMIN: 보상 수정
+  @Put('events/:eventId/rewards/:rewardId')
+  @Roles('OPERATOR', 'ADMIN')
+  updateReward(
+    @Param('eventId') eventId: string,
+    @Param('rewardId') rewardId: string,
+    @Body() dto: UpdateRewardDto,
+  ) {
+    return this.rewardService.update(eventId, rewardId, dto);
   }
 
-  // USER or ADMIN: 보상 요청
-  @Post('claims')
-  @Roles('USER', 'ADMIN')
-  async claimReward(@Body() dto: ClaimRewardDto) {
-    const alreadyClaimed = await this.claimService.hasClaimed(dto.userId, dto.eventId);
+  // OPERATOR or ADMIN: 보상 삭제
+  @Delete('events/:eventId/rewards/:rewardId')
+  @Roles('OPERATOR', 'ADMIN')
+  deleteReward(
+    @Param('eventId') eventId: string,
+    @Param('rewardId') rewardId: string,
+  ) {
+    return this.rewardService.delete(eventId, rewardId);
+  }
+
+  // USER : 보상 요청
+  @Post('events/:eventId/claims')
+  @Roles('USER')
+  async claimReward(
+    @Param('eventId') eventId: string,
+    @Body() dto: Omit<ClaimRewardDto, 'eventId'>,
+  ) {
+    const alreadyClaimed = await this.claimService.hasClaimed(dto.userId, eventId);
     if (alreadyClaimed) {
-      return this.claimService.createWithResult(dto, false, '이미 보상을 수령했습니다');
+      return this.claimService.createWithResult({ ...dto, eventId }, false, '이미 보상을 수령했습니다');
     }
 
     const user = await this.userService.getUserInfo(dto.userId);
-    const event = await this.eventService.findById(dto.eventId);
+    const event = await this.eventService.findById(eventId);
     const success = this.conditionEvaluator.evaluate(event.conditions, user);
     const reason = success ? '조건 충족' : '조건 불충족';
 
-    return this.claimService.createWithResult(dto, success, reason);
+    return this.claimService.createWithResult({ ...dto, eventId }, success, reason);
   }
 
-  // USER or ADMIN: 본인 이력 조회
+  // USER or AUDITOR or ADMIN: 본인 이력 조회
   @Get('claims/user/:userId')
-  @Roles('USER', 'ADMIN')
+  @Roles('USER', 'AUDITOR', 'ADMIN')
   getClaimsByUser(@Param('userId') userId: string) {
     return this.claimService.findByUser(userId);
   }

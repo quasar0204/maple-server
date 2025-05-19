@@ -71,20 +71,20 @@ describe('EventController (e2e)', () => {
     });
   });
 
-  describe('POST /claims (보상 요청)', () => {
+  describe('POST /events/:eventId/claims (보상 요청)', () => {
     it('should allow USER', () => {
       return request(app.getHttpServer())
-        .post('/claims')
+        .post(`/events/${createdEventId}/claims`)
         .set('Authorization', `Bearer ${userToken}`)
-        .send({ userId: 'test-user-123', eventId: createdEventId })
+        .send({ userId: 'test-user-123' })
         .expect(201);
     });
 
     it('should forbid OPERATOR', () => {
       return request(app.getHttpServer())
-        .post('/claims')
+        .post(`/events/${createdEventId}/claims`)
         .set('Authorization', `Bearer ${operatorToken}`)
-        .send({ userId: 'test-user-123', eventId: createdEventId })
+        .send({ userId: 'test-user-123' })
         .expect(403);
     });
   });
