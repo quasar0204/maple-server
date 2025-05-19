@@ -9,7 +9,17 @@ import { ClaimService } from '../services/claim.service';
 import { UserService } from '../services/user.service';
 import { Roles } from '../auth/roles.decorator';
 import { UpdateRewardDto } from '../dto/update-reward.dto';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiParam,
+} from '@nestjs/swagger';
 
+@ApiTags('Event API')
+@ApiBearerAuth('access-token')
 @Controller()
 export class EventController {
   constructor(
@@ -20,21 +30,42 @@ export class EventController {
     private readonly conditionEvaluator: ConditionEvaluator,
   ) {}
 
-  // OPERATOR or ADMIN: 이벤트 생성
   @Post('events')
   @Roles('OPERATOR', 'ADMIN')
+  @ApiOperation({ summary: '이벤트 생성' })
+  @ApiBody({ type: CreateEventDto })
+  @ApiResponse({ status: 201, description: '이벤트가 성공적으로 생성됨' })
   createEvent(@Body() dto: CreateEventDto) {
     return this.eventService.create(dto);
   }
 
-  // 모든 역할: 이벤트 전체 조회
   @Get('events')
+  @ApiOperation({ summary: '이벤트 전체 조회' })
+  @ApiResponse({ status: 200, description: '이벤트 리스트 반환' })
   getAllEvents() {
     return this.eventService.findAll();
   }
 
-  // 모든 역할: 이벤트 상세 조회 (보상 포함)
   @Get('events/:id')
+  @ApiOperation({ summary: '이벤트 상세 조회 (보상 포함)' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiResponse({
+    status: 200,
+    description: '이벤트 상세 및 보상 목록 포함',
+    schema: {
+      example: {
+        _id: '665001f8f3a8a9b9f5cdab12',
+        title: '출석 보상 이벤트',
+        description: '3일간 로그인하면 보상 지급',
+        startDate: '2025-06-01T00:00:00Z',
+        endDate: '2025-06-10T00:00:00Z',
+        rewards: [
+          { type: 'item', value: 'itemA', quantity: 1 },
+          { type: 'coupon', value: 'WELCOME2025', quantity: 1 },
+        ],
+      },
+    },
+  })
   async getEventById(@Param('id') id: string) {
     const event = await this.eventService.findById(id);
     const rewards = await this.rewardService.findByEvent(id);
@@ -44,9 +75,12 @@ export class EventController {
     };
   }
 
-  // OPERATOR or ADMIN: 보상 등록
   @Post('events/:eventId/rewards')
   @Roles('OPERATOR', 'ADMIN')
+  @ApiOperation({ summary: '보상 등록' })
+  @ApiParam({ name: 'eventId', type: String })
+  @ApiBody({ type: CreateRewardDto })
+  @ApiResponse({ status: 201, description: '보상이 성공적으로 등록됨' })
   createReward(
     @Param('eventId') eventId: string,
     @Body() dto: Omit<CreateRewardDto, 'eventId'>,
@@ -54,9 +88,13 @@ export class EventController {
     return this.rewardService.create({ ...dto, eventId });
   }
 
-  // OPERATOR or ADMIN: 보상 수정
   @Put('events/:eventId/rewards/:rewardId')
   @Roles('OPERATOR', 'ADMIN')
+  @ApiOperation({ summary: '보상 수정' })
+  @ApiParam({ name: 'eventId', type: String })
+  @ApiParam({ name: 'rewardId', type: String })
+  @ApiBody({ type: UpdateRewardDto })
+  @ApiResponse({ status: 200, description: '보상 수정 완료' })
   updateReward(
     @Param('eventId') eventId: string,
     @Param('rewardId') rewardId: string,
@@ -65,9 +103,12 @@ export class EventController {
     return this.rewardService.update(eventId, rewardId, dto);
   }
 
-  // OPERATOR or ADMIN: 보상 삭제
   @Delete('events/:eventId/rewards/:rewardId')
   @Roles('OPERATOR', 'ADMIN')
+  @ApiOperation({ summary: '보상 삭제' })
+  @ApiParam({ name: 'eventId', type: String })
+  @ApiParam({ name: 'rewardId', type: String })
+  @ApiResponse({ status: 200, description: '보상 삭제 완료' })
   deleteReward(
     @Param('eventId') eventId: string,
     @Param('rewardId') rewardId: string,
@@ -75,9 +116,12 @@ export class EventController {
     return this.rewardService.delete(eventId, rewardId);
   }
 
-  // USER : 보상 요청
   @Post('events/:eventId/claims')
   @Roles('USER')
+  @ApiOperation({ summary: '유저 보상 요청' })
+  @ApiParam({ name: 'eventId', type: String })
+  @ApiBody({ type: ClaimRewardDto })
+  @ApiResponse({ status: 201, description: '보상 요청 처리 결과 반환' })
   async claimReward(
     @Param('eventId') eventId: string,
     @Body() dto: Omit<ClaimRewardDto, 'eventId'>,
@@ -95,16 +139,19 @@ export class EventController {
     return this.claimService.createWithResult({ ...dto, eventId }, success, reason);
   }
 
-  // USER or AUDITOR or ADMIN: 본인 이력 조회
   @Get('claims/user/:userId')
   @Roles('USER', 'AUDITOR', 'ADMIN')
+  @ApiOperation({ summary: '특정 유저의 보상 이력 조회' })
+  @ApiParam({ name: 'userId', type: String })
+  @ApiResponse({ status: 200, description: '유저 보상 이력 반환' })
   getClaimsByUser(@Param('userId') userId: string) {
     return this.claimService.findByUser(userId);
   }
 
-  // AUDITOR or ADMIN: 전체 이력 조회
   @Get('claims')
   @Roles('AUDITOR', 'ADMIN')
+  @ApiOperation({ summary: '전체 보상 이력 조회' })
+  @ApiResponse({ status: 200, description: '전체 유저의 보상 이력 리스트 반환' })
   getAllClaims() {
     return this.claimService.findAll();
   }
