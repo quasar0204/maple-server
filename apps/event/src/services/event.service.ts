@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { Event, EventDocument } from '../schemas/event.schema';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
+import { NotFoundException } from '@nestjs/common';
+
 
 @Injectable()
 export class EventService {
@@ -19,6 +21,14 @@ export class EventService {
   async update(id: string, dto: UpdateEventDto) {
     return this.eventModel.findByIdAndUpdate(id, dto, { new: true }).exec();
   }
+
+  async toggleActive(id: string) {
+    const event = await this.eventModel.findById(id);
+    if (!event) throw new NotFoundException('이벤트를 찾을 수 없습니다.');
+    event.isActive = !event.isActive;
+    return event.save();
+  }
+
 
   async findAll() {
     return this.eventModel.find().sort({ createdAt: -1 }).exec();
