@@ -9,6 +9,8 @@ import { ClaimService } from '../services/claim.service';
 import { UserService } from '../services/user.service';
 import { Roles } from '../auth/roles.decorator';
 import { UpdateRewardDto } from '../dto/update-reward.dto';
+import { UpdateEventDto } from '../dto/update-event.dto';
+
 import {
   ApiTags,
   ApiOperation,
