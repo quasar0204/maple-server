@@ -1,99 +1,134 @@
+# 🍁 maple-server
+
+이벤트 기반 보상 시스템 백엔드. NestJS 기반 MSA 구조로 설계되었으며, JWT 인증과 역할 기반 권한 제어를 포함합니다.  
+유저의 게임 활동 조건을 평가해 보상을 지급하며, **유저 요청 기반 트리거**와 **자동 지급 트리거**를 모두 지원합니다.
+
+## 🏗️ 프로젝트 구조
+
+```
+apps/
+├── auth/        # 유저 인증 및 로그인/회원가입 기능
+├── event/       # 이벤트, 보상, 신청 처리 및 조건 검증
+├── gateway/     # 인증 및 권한 검사 후 요청 라우팅
+````
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <img width="595" alt="스크린샷 2025-05-20 오전 2 04 06" src="https://github.com/user-attachments/assets/7bd952b7-e919-46de-8c9e-fe403e205fc0" />
 </p>
+- 전체 구조는 **gateway → auth 또는 event**로 요청을 전달하는 형태입니다.
+- 모든 서비스는 MongoDB를 사용하며, 실제 배포 환경에서는 서비스별 데이터베이스 분리를 권장하지만, 현재는 하나의 DB를 네임스페이스만 분리하여 사용합니다.
+- gateway 외부에서 auth/event를 직접 호출하는 것은 막는 것이 보안상 이상적이나, 데모 구현에서는 시간 관계상 해당 제한은 적용되지 않았습니다.
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+---
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## 🚀 실행 방법 (Docker Compose)
 
 ```bash
-$ npm install
+npm install
+docker compose up --build
+````
+
+* Gateway API: [http://localhost:3001](http://localhost:3001)
+* Event API (직접 호출 시): [http://localhost:3002](http://localhost:3002)
+* Swagger (Event): [http://localhost:3002/api](http://localhost:3002/api)
+
+---
+
+## 🔐 역할 기반 권한
+
+| 역할       | 권한 설명          |
+| -------- | -------------- |
+| USER     | 보상 요청 가능       |
+| OPERATOR | 이벤트 및 보상 등록 가능 |
+| AUDITOR  | 보상 이력 조회만 가능   |
+| ADMIN    | 모든 기능 접근 가능    |
+
+---
+
+## ✍️ 설계 배경 및 방향성
+
+### 🎯 트리거 유형
+
+이벤트 보상 처리는 다음 두 가지 트리거 방식에 대응하도록 설계되었습니다:
+
+1. **ON\_DEMAND**
+   유저가 직접 보상을 요청하면 조건을 평가하여 지급 여부를 판단합니다. 조건 충족 시 `PENDING` 상태로 기록되며, 이후 Admin Page를 통해 운영자가 수동으로 확정할 수 있습니다.
+
+2. **AUTO**
+   외부 시스템 또는 자동화된 분석 결과를 기반으로, 별도 검토 없이 자동으로 보상을 지급하는 구조입니다.
+   예: 익스트림 칼로스 격파 칭호 보유자면 → 자동 SUCCESS 처리
+
+---
+
+## 🔐 Auth Server
+
+* `POST /auth/signup`: 회원가입 (이메일, 비밀번호, 닉네임, 역할 포함)
+* `POST /auth/login`: 로그인 → JWT 발급
+
+JWT Payload 구조:
+
+```json
+{
+  "id": "<MongoDB User ID>",
+  "email": "user@example.com",
+  "role": "USER | OPERATOR | ADMIN | AUDITOR"
+}
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## 📦 Event Server
 
-# watch mode
-$ npm run start:dev
+* Swagger 경로: `http://localhost:3002/api`
+* 유저 정보는 실제 메이플스토리 유저가 아닌 더미 `UserService`를 통해 조회됩니다.
+* 보상 지급은 외부 API 호출을 전제로 하며, 데모에서는 생략된 상태입니다. (게임 서버를 데이터를 가지고 있는 서비스를 호출 하는 방식)
 
-# production mode
-$ npm run start:prod
+### 주요 API 목록
+
+| 메서드    | 경로                                        | 설명          | 권한                   |
+| ------ | ----------------------------------------- | ----------- | -------------------- |
+| POST   | /events                                   | 이벤트 등록      | OPERATOR, ADMIN      |
+| PUT    | /events/\:id                              | 이벤트 수정      | OPERATOR, ADMIN      |
+| PATCH  | /events/\:id/active                       | 이벤트 활성화 토글  | OPERATOR, ADMIN      |
+| POST   | /events/\:eventId/rewards                 | 보상 등록       | OPERATOR, ADMIN      |
+| PUT    | /events/\:eventId/rewards/\:rewardId      | 보상 수정       | OPERATOR, ADMIN      |
+| DELETE | /events/\:eventId/rewards/\:rewardId      | 보상 삭제       | OPERATOR, ADMIN      |
+| POST   | /events/\:eventId/claims                  | 유저 보상 요청    | USER                 |
+| PATCH  | /events/\:eventId/claims/\:claimId/status | 보상 상태 수동 변경 | ADMIN                |
+| GET    | /claims                                   | 전체 보상 이력 조회 | AUDITOR, ADMIN       |
+| GET    | /claims/user/\:userId                     | 유저 보상 이력 조회 | USER, AUDITOR, ADMIN |
+
+---
+
+## 🧠 조건 평가 설계
+
+* 조건은 현재 2가지만 구현했으며 하나는 비교 조건이며, 다른 하나는 업적의 유무 판단입니다. **새로운 조건 추가 시 코드를 확장하는 구조**입니다:
+
+* 조건 평가는 `ConditionEvaluator`를 통해 수행되며, 비교 조건 및 업적 조건 모두 지원합니다.
+
+* 비교 조건 예시 ) 레벨 220 이상
+* 업적 조건 예시 ) 익스트림 칼로스 1회 처치 업적 유무
+
+## 🧬 BigQuery 기반 자동 보상 설계 (미구현)
+
+보다 운영 친화적인 구조를 위해 **BigQuery를 활용한 자동 보상 시스템**도 설계에는 포함하였습니다만 현재는 오버엔지니어링이 심하여 직접 구현까진 하지 않은 상태입니다.
+
+* 이벤트 등록 시 SQL 쿼리를 함께 저장
+* 주기적으로 BigQuery 쿼리를 실행해 대상 유저 ID 리스트 확보
+* 별도 candidate 테이블에 저장
+* 보상 요청 시 해당 테이블 기준으로 자동 SUCCESS 처리
+
+* SQL만 작성해도 (아마 비개발자인) 운영자가 직접 보상 대상자를 제어할 수 있는 구조입니다.
+* 넥슨처럼 대규모 로그 분석 환경에서는 현실적이고 확장성 높은 구조입니다.
+
+---
+
+## 🛠 기술 스택
+
+* Node.js 18
+* NestJS (Monorepo)
+* MongoDB + Mongoose ODM (Docker 기반)
+* JWT 인증 (`@nestjs/jwt`, `passport-jwt`)
+* Swagger 문서화 (`@nestjs/swagger`)
+* Docker, Docker Compose
+
 ```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
