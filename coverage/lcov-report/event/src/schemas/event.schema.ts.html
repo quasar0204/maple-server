@@ -171,12 +171,13 @@ export class Event {
 &nbsp;
   @Prop({ required: true })
   description: string;
+  
 &nbsp;
   @Prop({ type: Array, required: true })
   conditions: Condition[];
 &nbsp;
-  @Prop({ required: true, enum: ['ON_DEMAND', 'ON_EVENT'], default: 'ON_DEMAND' })
-  triggerType: 'ON_DEMAND' | 'ON_EVENT';
+  @Prop({ required: true, enum: ['ON_DEMAND', 'AUTO'], default: 'ON_DEMAND' })
+  triggerType: 'ON_DEMAND' | 'AUTO';
 &nbsp;
   @Prop({ required: true })
   startDate: Date;

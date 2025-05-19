@@ -196,8 +196,8 @@ export class CreateEventDto {
   @IsNotEmpty()
   description: string;
 &nbsp;
-  @IsEnum(['ON_DEMAND', 'ON_EVENT'])
-  triggerType: 'ON_DEMAND' | 'ON_EVENT';
+  @IsEnum(['ON_DEMAND', 'AUTO'])
+  triggerType: 'ON_DEMAND' | 'AUTO';
 &nbsp;
   @IsArray()
   @ValidateNested({ each: true })

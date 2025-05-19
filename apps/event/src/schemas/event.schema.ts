@@ -28,10 +28,10 @@ export class Event {
 
   @Prop({
     required: true,
-    enum: ['ON_DEMAND', 'ON_EVENT'],
+    enum: ['ON_DEMAND', 'AUTO'],
     default: 'ON_DEMAND',
   })
-  triggerType: 'ON_DEMAND' | 'ON_EVENT';
+  triggerType: 'ON_DEMAND' | 'AUTO';
 
   @Prop({ required: true })
   startDate: Date;
