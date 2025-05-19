@@ -50,11 +50,7 @@ export class EventProxyController {
 
   @Put('events/:id')
   @Roles('OPERATOR', 'ADMIN')
-  updateEvent(
-    @Param('id') id: string,
-    @Body() body: any,
-    @Req() req: any,
-  ) {
+  updateEvent(@Param('id') id: string, @Body() body: any, @Req() req: any) {
     return this.proxy.forward(`${this.eventUrl}/events/${id}`, 'PUT', body, {
       Authorization: req.headers['authorization'],
     });
@@ -164,11 +160,8 @@ export class EventProxyController {
   @Get('claims')
   @Roles('AUDITOR', 'ADMIN')
   getAllClaims(@Req() req: any) {
-    return this.proxy.forward(
-      `${this.eventUrl}/claims`,
-      'GET',
-      null,
-      { Authorization: req.headers['authorization'] },
-    );
+    return this.proxy.forward(`${this.eventUrl}/claims`, 'GET', null, {
+      Authorization: req.headers['authorization'],
+    });
   }
 }

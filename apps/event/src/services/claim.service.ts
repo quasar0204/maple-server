@@ -25,7 +25,10 @@ export class ClaimService {
     return !!existing;
   }
 
-  async findOne(userId: string, eventId: string): Promise<ClaimDocument | null> {
+  async findOne(
+    userId: string,
+    eventId: string,
+  ): Promise<ClaimDocument | null> {
     return this.claimModel.findOne({ userId, eventId }).exec();
   }
 

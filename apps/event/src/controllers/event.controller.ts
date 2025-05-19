@@ -31,7 +31,6 @@ import { ClaimDocument } from '../schemas/claim.schema';
 import { Roles } from '../auth/roles.decorator';
 import { BadRequestException } from '@nestjs/common';
 
-
 import {
   ApiTags,
   ApiOperation,
@@ -152,7 +151,7 @@ export class EventController {
     const toggled = await this.eventService.toggleActive(id);
     return this.mapToEventResponse(toggled, []);
   }
-@Post('events/:eventId/rewards')
+  @Post('events/:eventId/rewards')
   @Roles('OPERATOR', 'ADMIN')
   @ApiOperation({ summary: '보상 등록' })
   @ApiParam({ name: 'eventId', type: String })
@@ -209,8 +208,7 @@ export class EventController {
       dto.userId,
       eventId,
     );
-    
-    
+
     if (alreadyClaimed) {
       const previous = await this.claimService.findOne(dto.userId, eventId);
       switch (previous?.status) {
@@ -219,10 +217,12 @@ export class EventController {
         case 'PENDING':
           throw new BadRequestException('보상 요청이 처리 중입니다.');
         case 'FAILED':
-          throw new BadRequestException('보상 조건을 만족하지 않아 수령할 수 없습니다.');
+          throw new BadRequestException(
+            '보상 조건을 만족하지 않아 수령할 수 없습니다.',
+          );
       }
     }
-    
+
     const user = await this.userService.getUserInfo(dto.userId);
     const event = await this.eventService.findById(eventId);
 
@@ -234,10 +234,16 @@ export class EventController {
     const passed = this.conditionEvaluator.evaluate(event.conditions, user);
 
     if (!passed) {
-      throw new BadRequestException('보상 조건을 만족하지 않아 수령할 수 없습니다.');
+      throw new BadRequestException(
+        '보상 조건을 만족하지 않아 수령할 수 없습니다.',
+      );
     }
-    
-    const result = await this.claimService.createPendingClaim({ ...dto, eventId }, passed,'조건 충족',);
+
+    const result = await this.claimService.createPendingClaim(
+      { ...dto, eventId },
+      passed,
+      '조건 충족',
+    );
 
     return this.mapToClaimResponse(result);
   }
@@ -250,7 +256,11 @@ export class EventController {
     @Param('claimId') claimId: string,
     @Body() body: UpdateClaimStatusDto,
   ): Promise<ClaimResponseDto> {
-    const claim = await this.claimService.updateStatus(claimId, body.status, body.reason);
+    const claim = await this.claimService.updateStatus(
+      claimId,
+      body.status,
+      body.reason,
+    );
     return this.mapToClaimResponse(claim);
   }
 
