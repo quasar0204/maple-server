@@ -1,7 +1,5 @@
 import {
   IsMongoId,
-  IsArray,
-  ValidateNested,
   IsString,
   IsNotEmpty,
 } from 'class-validator';

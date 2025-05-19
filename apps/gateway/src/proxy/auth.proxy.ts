@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, Headers, Inject } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { ProxyService } from './proxy.service';
 import { ConfigService } from '@nestjs/config';
 import { Public } from '../auth/public.decorator';
