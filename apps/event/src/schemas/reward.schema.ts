@@ -17,6 +17,12 @@ export class Reward {
 
   @Prop({ type: Array, required: true })
   rewards: RewardItem[];
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export const RewardSchema = SchemaFactory.createForClass(Reward);

@@ -29,7 +29,7 @@ export class ClaimService {
     dto: ClaimRewardDto,
     status: boolean,
     reason: string,
-  ): Promise<Claim> {
+  ): Promise<ClaimDocument> {
     const rewards = await this.rewardService.findByEvent(dto.eventId);
 
     const claim = new this.claimModel({
@@ -41,13 +41,13 @@ export class ClaimService {
     });
 
     return claim.save();
-  }
+}
 
-  async findAll(): Promise<Claim[]> {
+  async findAll(): Promise<ClaimDocument[]> {
     return this.claimModel.find().exec();
   }
 
-  async findByUser(userId: string): Promise<Claim[]> {
+  async findByUser(userId: string): Promise<ClaimDocument[]> {
     return this.claimModel.find({ userId }).exec();
   }
 

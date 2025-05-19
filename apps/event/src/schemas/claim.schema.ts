@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { Event } from './event.schema';
+import { RewardItem } from './reward.schema';
 
 export type ClaimDocument = Claim & Document;
 
@@ -17,6 +18,15 @@ export class Claim {
 
   @Prop({ required: true })
   reason: string;
+
+  @Prop({ type: Array })
+  rewardsGiven: RewardItem[];
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export const ClaimSchema = SchemaFactory.createForClass(Claim);
