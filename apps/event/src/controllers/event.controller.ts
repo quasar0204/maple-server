@@ -7,7 +7,6 @@ import {
   Put,
   Delete,
   Patch,
-  Query,
 } from '@nestjs/common';
 import { EventService } from '../services/event.service';
 import { RewardService } from '../services/reward.service';
@@ -20,6 +19,7 @@ import { UpdateEventDto } from '../dto/update-event.dto';
 import { CreateRewardDto } from '../dto/create-reward.dto';
 import { UpdateRewardDto } from '../dto/update-reward.dto';
 import { ClaimRewardDto } from '../dto/claim-reward.dto';
+import { UpdateClaimStatusDto } from '../dto/update-claim-status.dto';
 
 import { ResponseEventDto } from '../dto/response-event.dto';
 import { RewardResponseDto } from '../dto/response-reward.dto';
@@ -29,6 +29,8 @@ import { RewardDocument } from '../schemas/reward.schema';
 import { ClaimDocument } from '../schemas/claim.schema';
 
 import { Roles } from '../auth/roles.decorator';
+import { BadRequestException } from '@nestjs/common';
+
 
 import {
   ApiTags,
@@ -150,8 +152,7 @@ export class EventController {
     const toggled = await this.eventService.toggleActive(id);
     return this.mapToEventResponse(toggled, []);
   }
-
-  @Post('events/:eventId/rewards')
+@Post('events/:eventId/rewards')
   @Roles('OPERATOR', 'ADMIN')
   @ApiOperation({ summary: '보상 등록' })
   @ApiParam({ name: 'eventId', type: String })
@@ -208,20 +209,49 @@ export class EventController {
       dto.userId,
       eventId,
     );
+    
+    
+    if (alreadyClaimed) {
+      const previous = await this.claimService.findOne(dto.userId, eventId);
+      switch (previous?.status) {
+        case 'SUCCESS':
+          throw new BadRequestException('이미 보상을 수령한 이벤트입니다.');
+        case 'PENDING':
+          throw new BadRequestException('보상 요청이 처리 중입니다.');
+        case 'FAILED':
+          throw new BadRequestException('보상 조건을 만족하지 않아 수령할 수 없습니다.');
+      }
+    }
+    
     const user = await this.userService.getUserInfo(dto.userId);
     const event = await this.eventService.findById(eventId);
+
+    const now = new Date();
+    if (now < new Date(event.startDate) || now > new Date(event.endDate)) {
+      throw new BadRequestException('이벤트 기간이 아닙니다.');
+    }
+
     const passed = this.conditionEvaluator.evaluate(event.conditions, user);
-    const result = await this.claimService.createWithResult(
-      { ...dto, eventId },
-      alreadyClaimed ? false : passed,
-      alreadyClaimed
-        ? '이미 보상을 수령했습니다'
-        : passed
-          ? '조건 충족'
-          : '조건 불충족',
-    );
+
+    if (!passed) {
+      throw new BadRequestException('보상 조건을 만족하지 않아 수령할 수 없습니다.');
+    }
+    
+    const result = await this.claimService.createPendingClaim({ ...dto, eventId }, passed,'조건 충족',);
 
     return this.mapToClaimResponse(result);
+  }
+
+  @Patch('events/:eventId/claims/:claimId/status')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: '보상 처리 상태 변경' })
+  async updateClaimStatus(
+    @Param('eventId') eventId: string,
+    @Param('claimId') claimId: string,
+    @Body() body: UpdateClaimStatusDto,
+  ): Promise<ClaimResponseDto> {
+    const claim = await this.claimService.updateStatus(claimId, body.status, body.reason);
+    return this.mapToClaimResponse(claim);
   }
 
   @Get('claims/user/:userId')

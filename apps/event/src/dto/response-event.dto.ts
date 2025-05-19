@@ -22,7 +22,7 @@ class AchievementConditionDto {
   @ApiProperty({ example: 'achievement' })
   type: 'achievement';
 
-  @ApiProperty({ example: 'DAILY_LOGIN_365' })
+  @ApiProperty({ example: 'ANOTHER_POWER_6' })
   achievementId: string;
 }
 

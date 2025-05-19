@@ -25,7 +25,11 @@ export class ClaimService {
     return !!existing;
   }
 
-  async createWithResult(
+  async findOne(userId: string, eventId: string): Promise<ClaimDocument | null> {
+    return this.claimModel.findOne({ userId, eventId }).exec();
+  }
+
+  async createPendingClaim(
     dto: ClaimRewardDto,
     status: boolean,
     reason: string,
@@ -35,11 +39,25 @@ export class ClaimService {
     const claim = new this.claimModel({
       userId: dto.userId,
       eventId: dto.eventId,
-      status: status ? 'SUCCESS' : 'FAILED',
+      status: 'PENDING',
       reason,
       rewardsGiven: status ? rewards.flatMap((r) => r.rewards) : [],
     });
 
+    return claim.save();
+  }
+
+  async updateStatus(
+    claimId: string,
+    status: 'SUCCESS' | 'FAILED',
+    reason?: string,
+  ): Promise<ClaimDocument> {
+    const claim = await this.claimModel.findById(claimId);
+    if (!claim) {
+      throw new NotFoundException('해당 보상 요청을 찾을 수 없습니다.');
+    }
+    claim.status = status;
+    if (reason) claim.reason = reason;
     return claim.save();
   }
 

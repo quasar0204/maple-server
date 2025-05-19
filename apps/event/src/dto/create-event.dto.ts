@@ -51,9 +51,9 @@ export class CreateEventDto {
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ enum: ['ON_DEMAND', 'ON_EVENT'], example: 'ON_DEMAND' })
-  @IsEnum(['ON_DEMAND', 'ON_EVENT'])
-  triggerType: 'ON_DEMAND' | 'ON_EVENT';
+  @ApiProperty({ enum: ['ON_DEMAND', 'AUTO'], example: 'ON_DEMAND' })
+  @IsEnum(['ON_DEMAND', 'AUTO'])
+  triggerType: 'ON_DEMAND' | 'AUTO';
 
   @ApiProperty({
     description: '이벤트 조건들',

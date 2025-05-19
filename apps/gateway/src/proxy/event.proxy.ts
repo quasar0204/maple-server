@@ -2,6 +2,9 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
+  Patch,
   Body,
   Param,
   Query,
@@ -26,6 +29,7 @@ export class EventProxyController {
     this.eventUrl = this.configService.get<string>('EVENT_SERVICE_URL')!;
   }
 
+  // 이벤트
   @Post('events')
   @Roles('OPERATOR', 'ADMIN')
   createEvent(@Body() body: any, @Req() req: any) {
@@ -35,7 +39,7 @@ export class EventProxyController {
   }
 
   @Get('events')
-  getEvents() {
+  getAllEvents() {
     return this.proxy.forward(`${this.eventUrl}/events`, 'GET');
   }
 
@@ -44,48 +48,127 @@ export class EventProxyController {
     return this.proxy.forward(`${this.eventUrl}/events/${id}`, 'GET');
   }
 
-  @Post('rewards')
+  @Put('events/:id')
   @Roles('OPERATOR', 'ADMIN')
-  createReward(@Body() body: any, @Req() req: any) {
-    return this.proxy.forward(`${this.eventUrl}/rewards`, 'POST', body, {
+  updateEvent(
+    @Param('id') id: string,
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    return this.proxy.forward(`${this.eventUrl}/events/${id}`, 'PUT', body, {
       Authorization: req.headers['authorization'],
     });
   }
 
-  @Get('rewards')
-  getRewardsByEvent(@Query('eventId') eventId: string) {
+  @Patch('events/:id/active')
+  @Roles('OPERATOR', 'ADMIN')
+  toggleEventActive(@Param('id') id: string, @Req() req: any) {
     return this.proxy.forward(
-      `${this.eventUrl}/rewards?eventId=${eventId}`,
-      'GET',
+      `${this.eventUrl}/events/${id}/active`,
+      'PATCH',
+      null,
+      { Authorization: req.headers['authorization'] },
     );
   }
 
-  @Post('claims')
-  @Roles('USER', 'ADMIN')
-  claimReward(@Body() body: any, @Req() req: any) {
-    return this.proxy.forward(`${this.eventUrl}/claims`, 'POST', body, {
-      Authorization: req.headers['authorization'],
-    });
+  // 보상
+  @Post('events/:eventId/rewards')
+  @Roles('OPERATOR', 'ADMIN')
+  createReward(
+    @Param('eventId') eventId: string,
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    return this.proxy.forward(
+      `${this.eventUrl}/events/${eventId}/rewards`,
+      'POST',
+      body,
+      { Authorization: req.headers['authorization'] },
+    );
+  }
+
+  @Put('events/:eventId/rewards/:rewardId')
+  @Roles('OPERATOR', 'ADMIN')
+  updateReward(
+    @Param('eventId') eventId: string,
+    @Param('rewardId') rewardId: string,
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    return this.proxy.forward(
+      `${this.eventUrl}/events/${eventId}/rewards/${rewardId}`,
+      'PUT',
+      body,
+      { Authorization: req.headers['authorization'] },
+    );
+  }
+
+  @Delete('events/:eventId/rewards/:rewardId')
+  @Roles('OPERATOR', 'ADMIN')
+  deleteReward(
+    @Param('eventId') eventId: string,
+    @Param('rewardId') rewardId: string,
+    @Req() req: any,
+  ) {
+    return this.proxy.forward(
+      `${this.eventUrl}/events/${eventId}/rewards/${rewardId}`,
+      'DELETE',
+      null,
+      { Authorization: req.headers['authorization'] },
+    );
+  }
+
+  // 보상 요청
+  @Post('events/:eventId/claims')
+  @Roles('USER')
+  claimReward(
+    @Param('eventId') eventId: string,
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    return this.proxy.forward(
+      `${this.eventUrl}/events/${eventId}/claims`,
+      'POST',
+      body,
+      { Authorization: req.headers['authorization'] },
+    );
+  }
+
+  @Patch('events/:eventId/claims/:claimId/status')
+  @Roles('ADMIN')
+  updateClaimStatus(
+    @Param('eventId') eventId: string,
+    @Param('claimId') claimId: string,
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    return this.proxy.forward(
+      `${this.eventUrl}/events/${eventId}/claims/${claimId}/status`,
+      'PATCH',
+      body,
+      { Authorization: req.headers['authorization'] },
+    );
   }
 
   @Get('claims/user/:userId')
-  @Roles('USER', 'ADMIN')
+  @Roles('USER', 'AUDITOR', 'ADMIN')
   getUserClaims(@Param('userId') userId: string, @Req() req: any) {
     return this.proxy.forward(
       `${this.eventUrl}/claims/user/${userId}`,
       'GET',
       null,
-      {
-        Authorization: req.headers['authorization'],
-      },
+      { Authorization: req.headers['authorization'] },
     );
   }
 
   @Get('claims')
   @Roles('AUDITOR', 'ADMIN')
   getAllClaims(@Req() req: any) {
-    return this.proxy.forward(`${this.eventUrl}/claims`, 'GET', null, {
-      Authorization: req.headers['authorization'],
-    });
+    return this.proxy.forward(
+      `${this.eventUrl}/claims`,
+      'GET',
+      null,
+      { Authorization: req.headers['authorization'] },
+    );
   }
 }
