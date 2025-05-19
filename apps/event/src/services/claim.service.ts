@@ -41,7 +41,7 @@ export class ClaimService {
     });
 
     return claim.save();
-}
+  }
 
   async findAll(): Promise<ClaimDocument[]> {
     return this.claimModel.find().exec();

@@ -41,6 +41,12 @@ export class Event {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);

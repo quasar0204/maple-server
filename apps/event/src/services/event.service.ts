@@ -17,7 +17,9 @@ export class EventService {
   }
 
   async update(id: string, dto: UpdateEventDto) {
-    const updated = await this.eventModel.findByIdAndUpdate(id, dto, { new: true }).exec();
+    const updated = await this.eventModel
+      .findByIdAndUpdate(id, dto, { new: true })
+      .exec();
     if (!updated) {
       throw new NotFoundException('해당 이벤트를 찾을 수 없습니다.');
     }

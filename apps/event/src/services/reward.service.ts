@@ -22,11 +22,17 @@ export class RewardService {
 
   async update(eventId: string, rewardId: string, dto: UpdateRewardDto) {
     const reward = await this.rewardModel
-      .findOneAndUpdate({ _id: rewardId, eventId }, { $set: dto }, { new: true })
+      .findOneAndUpdate(
+        { _id: rewardId, eventId },
+        { $set: dto },
+        { new: true },
+      )
       .exec();
 
     if (!reward) {
-      throw new NotFoundException('해당 보상을 찾을 수 없거나 이벤트에 속하지 않습니다.');
+      throw new NotFoundException(
+        '해당 보상을 찾을 수 없거나 이벤트에 속하지 않습니다.',
+      );
     }
 
     return reward;
@@ -38,7 +44,9 @@ export class RewardService {
       .exec();
 
     if (!result) {
-      throw new NotFoundException('해당 보상을 찾을 수 없거나 이벤트에 속하지 않습니다.');
+      throw new NotFoundException(
+        '해당 보상을 찾을 수 없거나 이벤트에 속하지 않습니다.',
+      );
     }
 
     return { success: true };

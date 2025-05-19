@@ -7,6 +7,7 @@ import {
   Put,
   Delete,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { EventService } from '../services/event.service';
 import { RewardService } from '../services/reward.service';
@@ -102,7 +103,9 @@ export class EventController {
     const events = await this.eventService.findAll();
     return Promise.all(
       events.map(async (event) => {
-        const rewards = await this.rewardService.findByEvent(event._id.toString());
+        const rewards = await this.rewardService.findByEvent(
+          event._id.toString(),
+        );
         return this.mapToEventResponse(
           event,
           rewards.flatMap((r) => r.rewards.map((item) => ({ ...item }))),
@@ -130,7 +133,10 @@ export class EventController {
   @ApiParam({ name: 'id', type: String })
   @ApiBody({ type: UpdateEventDto })
   @ApiResponse({ status: 200, type: ResponseEventDto })
-  async updateEvent(@Param('id') id: string, @Body() dto: UpdateEventDto): Promise<ResponseEventDto> {
+  async updateEvent(
+    @Param('id') id: string,
+    @Body() dto: UpdateEventDto,
+  ): Promise<ResponseEventDto> {
     const updated = await this.eventService.update(id, dto);
     return this.mapToEventResponse(updated, []);
   }
@@ -198,14 +204,21 @@ export class EventController {
     @Param('eventId') eventId: string,
     @Body() dto: Omit<ClaimRewardDto, 'eventId'>,
   ): Promise<ClaimResponseDto> {
-    const alreadyClaimed = await this.claimService.hasClaimed(dto.userId, eventId);
+    const alreadyClaimed = await this.claimService.hasClaimed(
+      dto.userId,
+      eventId,
+    );
     const user = await this.userService.getUserInfo(dto.userId);
     const event = await this.eventService.findById(eventId);
     const passed = this.conditionEvaluator.evaluate(event.conditions, user);
     const result = await this.claimService.createWithResult(
       { ...dto, eventId },
       alreadyClaimed ? false : passed,
-      alreadyClaimed ? '이미 보상을 수령했습니다' : passed ? '조건 충족' : '조건 불충족',
+      alreadyClaimed
+        ? '이미 보상을 수령했습니다'
+        : passed
+          ? '조건 충족'
+          : '조건 불충족',
     );
 
     return this.mapToClaimResponse(result);
@@ -216,7 +229,9 @@ export class EventController {
   @ApiOperation({ summary: '특정 유저의 보상 이력 조회' })
   @ApiParam({ name: 'userId', type: String })
   @ApiResponse({ status: 200, type: [ClaimResponseDto] })
-  async getClaimsByUser(@Param('userId') userId: string): Promise<ClaimResponseDto[]> {
+  async getClaimsByUser(
+    @Param('userId') userId: string,
+  ): Promise<ClaimResponseDto[]> {
     const claims = await this.claimService.findByUser(userId);
     return claims.map((c) => this.mapToClaimResponse(c));
   }
