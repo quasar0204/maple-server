@@ -1,17 +1,7 @@
 import { IsMongoId, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-
-export class RewardItemDto {
-  @ApiProperty({ enum: ['item', 'point', 'coupon'], example: 'item' })
-  type: 'item' | 'point' | 'coupon';
-
-  @ApiProperty({ example: 'itemA' })
-  value: string;
-
-  @ApiProperty({ example: 5 })
-  quantity: number;
-}
+import { RewardItemDto } from './reward-item.dto';
 
 export class CreateRewardDto {
   @ApiProperty({

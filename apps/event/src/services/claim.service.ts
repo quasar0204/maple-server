@@ -54,14 +54,14 @@ export class ClaimService {
   async validateEventExists(eventId: string): Promise<void> {
     const event = await this.eventService.findById(eventId);
     if (!event) {
-      throw new NotFoundException('Event not found');
+      throw new NotFoundException('해당 이벤트를 찾을 수 없습니다.');
     }
   }
 
   async validateUserInfo(userId: string): Promise<Record<string, any>> {
     const user = await this.userService.getUserInfo(userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('해당 유저를 찾을 수 없습니다.');
     }
     return user;
   }
