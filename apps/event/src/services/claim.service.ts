@@ -21,7 +21,7 @@ export class ClaimService {
   ) {}
 
   async hasClaimed(userId: string, eventId: string): Promise<boolean> {
-    const existing = await this.claimModel.findOne({ userId, eventId });
+    const existing = await this.claimModel.findOne({ userId, eventId }).exec();
     return !!existing;
   }
 
@@ -44,10 +44,25 @@ export class ClaimService {
   }
 
   async findAll(): Promise<Claim[]> {
-    return this.claimModel.find();
+    return this.claimModel.find().exec();
   }
 
   async findByUser(userId: string): Promise<Claim[]> {
-    return this.claimModel.find({ userId });
+    return this.claimModel.find({ userId }).exec();
+  }
+
+  async validateEventExists(eventId: string): Promise<void> {
+    const event = await this.eventService.findById(eventId);
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+  }
+
+  async validateUserInfo(userId: string): Promise<Record<string, any>> {
+    const user = await this.userService.getUserInfo(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 }
