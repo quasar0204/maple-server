@@ -7,10 +7,12 @@ import {
   Patch,
   Body,
   Param,
-  Query,
   Req,
   UseGuards,
+  HttpException,
+  InternalServerErrorException,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ProxyService } from './proxy.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -20,7 +22,7 @@ import { ConfigService } from '@nestjs/config';
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EventProxyController {
-  private eventUrl: string;
+  private readonly eventUrl: string;
 
   constructor(
     private readonly proxy: ProxyService,
@@ -29,57 +31,73 @@ export class EventProxyController {
     this.eventUrl = this.configService.get<string>('EVENT_SERVICE_URL')!;
   }
 
-  // 이벤트
+  private async safeForward(
+    ...args: Parameters<ProxyService['forward']>
+  ): Promise<any> {
+    try {
+      return await this.proxy.forward(...args);
+    } catch (error: any) {
+      if (error.response?.status && error.response?.data) {
+        throw new HttpException(error.response.data, error.response.status);
+      }
+      if (error instanceof HttpException) throw error;
+      throw new InternalServerErrorException();
+    }
+  }
+
   @Post('events')
   @Roles('OPERATOR', 'ADMIN')
-  createEvent(@Body() body: any, @Req() req: any) {
-    return this.proxy.forward(`${this.eventUrl}/events`, 'POST', body, {
+  createEvent(@Body() body: any, @Req() req: Request) {
+    return this.safeForward(`${this.eventUrl}/events`, 'POST', body, {
       Authorization: req.headers['authorization'],
     });
   }
 
   @Get('events')
   getAllEvents() {
-    return this.proxy.forward(`${this.eventUrl}/events`, 'GET');
+    return this.safeForward(`${this.eventUrl}/events`, 'GET');
   }
 
   @Get('events/:id')
   getEventById(@Param('id') id: string) {
-    return this.proxy.forward(`${this.eventUrl}/events/${id}`, 'GET');
+    return this.safeForward(`${this.eventUrl}/events/${id}`, 'GET');
   }
 
   @Put('events/:id')
   @Roles('OPERATOR', 'ADMIN')
-  updateEvent(@Param('id') id: string, @Body() body: any, @Req() req: any) {
-    return this.proxy.forward(`${this.eventUrl}/events/${id}`, 'PUT', body, {
+  updateEvent(@Param('id') id: string, @Body() body: any, @Req() req: Request) {
+    return this.safeForward(`${this.eventUrl}/events/${id}`, 'PUT', body, {
       Authorization: req.headers['authorization'],
     });
   }
 
   @Patch('events/:id/active')
   @Roles('OPERATOR', 'ADMIN')
-  toggleEventActive(@Param('id') id: string, @Req() req: any) {
-    return this.proxy.forward(
+  toggleEventActive(@Param('id') id: string, @Req() req: Request) {
+    return this.safeForward(
       `${this.eventUrl}/events/${id}/active`,
       'PATCH',
       null,
-      { Authorization: req.headers['authorization'] },
+      {
+        Authorization: req.headers['authorization'],
+      },
     );
   }
 
-  // 보상
   @Post('events/:eventId/rewards')
   @Roles('OPERATOR', 'ADMIN')
   createReward(
     @Param('eventId') eventId: string,
     @Body() body: any,
-    @Req() req: any,
+    @Req() req: Request,
   ) {
-    return this.proxy.forward(
+    return this.safeForward(
       `${this.eventUrl}/events/${eventId}/rewards`,
       'POST',
       body,
-      { Authorization: req.headers['authorization'] },
+      {
+        Authorization: req.headers['authorization'],
+      },
     );
   }
 
@@ -89,13 +107,15 @@ export class EventProxyController {
     @Param('eventId') eventId: string,
     @Param('rewardId') rewardId: string,
     @Body() body: any,
-    @Req() req: any,
+    @Req() req: Request,
   ) {
-    return this.proxy.forward(
+    return this.safeForward(
       `${this.eventUrl}/events/${eventId}/rewards/${rewardId}`,
       'PUT',
       body,
-      { Authorization: req.headers['authorization'] },
+      {
+        Authorization: req.headers['authorization'],
+      },
     );
   }
 
@@ -104,29 +124,32 @@ export class EventProxyController {
   deleteReward(
     @Param('eventId') eventId: string,
     @Param('rewardId') rewardId: string,
-    @Req() req: any,
+    @Req() req: Request,
   ) {
-    return this.proxy.forward(
+    return this.safeForward(
       `${this.eventUrl}/events/${eventId}/rewards/${rewardId}`,
       'DELETE',
       null,
-      { Authorization: req.headers['authorization'] },
+      {
+        Authorization: req.headers['authorization'],
+      },
     );
   }
 
-  // 보상 요청
   @Post('events/:eventId/claims')
   @Roles('USER')
   claimReward(
     @Param('eventId') eventId: string,
     @Body() body: any,
-    @Req() req: any,
+    @Req() req: Request,
   ) {
-    return this.proxy.forward(
+    return this.safeForward(
       `${this.eventUrl}/events/${eventId}/claims`,
       'POST',
       body,
-      { Authorization: req.headers['authorization'] },
+      {
+        Authorization: req.headers['authorization'],
+      },
     );
   }
 
@@ -136,31 +159,35 @@ export class EventProxyController {
     @Param('eventId') eventId: string,
     @Param('claimId') claimId: string,
     @Body() body: any,
-    @Req() req: any,
+    @Req() req: Request,
   ) {
-    return this.proxy.forward(
+    return this.safeForward(
       `${this.eventUrl}/events/${eventId}/claims/${claimId}/status`,
       'PATCH',
       body,
-      { Authorization: req.headers['authorization'] },
+      {
+        Authorization: req.headers['authorization'],
+      },
     );
   }
 
   @Get('claims/user/:userId')
   @Roles('USER', 'AUDITOR', 'ADMIN')
-  getUserClaims(@Param('userId') userId: string, @Req() req: any) {
-    return this.proxy.forward(
+  getUserClaims(@Param('userId') userId: string, @Req() req: Request) {
+    return this.safeForward(
       `${this.eventUrl}/claims/user/${userId}`,
       'GET',
       null,
-      { Authorization: req.headers['authorization'] },
+      {
+        Authorization: req.headers['authorization'],
+      },
     );
   }
 
   @Get('claims')
   @Roles('AUDITOR', 'ADMIN')
-  getAllClaims(@Req() req: any) {
-    return this.proxy.forward(`${this.eventUrl}/claims`, 'GET', null, {
+  getAllClaims(@Req() req: Request) {
+    return this.safeForward(`${this.eventUrl}/claims`, 'GET', null, {
       Authorization: req.headers['authorization'],
     });
   }
