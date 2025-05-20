@@ -181,6 +181,12 @@ export class EventController {
     return this.mapToRewardResponse(updated);
   }
 
+  /**
+   * event의 triggerType이 AUTO인 경우 createPendingClaim와 유사한 함수를 만들고
+   * 함수 내부에서 보상을 지급해주는 실제 외부 서비스를 호출 한 후 응답 결과에 따라 보상을 자동으로 지급할 수 있습니다.
+   * 다만 외부 서비스가 없기 때문에 구현 자체는 생략했습니다.
+   * 응답 결과가 성공이면 바로 성공했다고 처리하면 되고 실패한다면 실패한거만 따로 모아서 스케줄러를 돌리거나 DLQ 같은 방식을 사용 할 수 있습니다.
+   */
   @Delete('events/:eventId/rewards/:rewardId')
   @Roles('OPERATOR', 'ADMIN')
   @ApiOperation({ summary: '보상 삭제' })
