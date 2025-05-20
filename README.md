@@ -27,6 +27,7 @@ npm install
 docker compose up --build
 ````
 
+* Auth API (직접 호출 시): [http://localhost:3000](http://localhost:3000)
 * Gateway API: [http://localhost:3001](http://localhost:3001)
 * Event API (직접 호출 시): [http://localhost:3002](http://localhost:3002)
 * Swagger (Event): [http://localhost:3002/api](http://localhost:3002/api)
@@ -143,6 +144,8 @@ JWT Payload 구조:
 
 * 현재 데모 구현에서는 시간 제약상 해당 제한이 적용되어 있지 않으며, 직접 API를 호출하는 것이 가능합니다.
   (http://localhost:3002/api 에 직접 접근 가능하지만, 실제 운영 환경에서는 막혀야 정상입니다.)
+
+* Swagger는 dev 또는 local에서만 적용되게 해야하고 현재 dependency에 보안 이슈가 있지만 따로 작업하진 않았습니다.
 
 ---
 
